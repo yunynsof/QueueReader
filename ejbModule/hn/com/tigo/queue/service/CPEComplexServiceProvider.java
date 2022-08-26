@@ -17,7 +17,7 @@ import hn.com.tigo.josm.gateway.services.gateway.ExecuteComplexOrderService;
 
 
 /**
- * CPEComplexServiceProvider.
+ * This class is in charge of showing the methods for consuming the CPE service..
  *
  * @author Yuny Rene Rodriguez Perez {@literal<mailto: yrodriguez@hightech-corp.com />}
  * @version  1.0.0

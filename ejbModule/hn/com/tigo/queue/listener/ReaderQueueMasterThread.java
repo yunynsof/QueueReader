@@ -50,7 +50,7 @@ import hn.com.tigo.queue.utils.ReadFilesConfig;
 import hn.com.tigo.queue.utils.States;
 
 /**
- * ReaderQueueMasterThread.
+ * This class contains the main logic for reading events to be processed and read them to JMS queues.
  *
  * @author Yuny Rene Rodriguez Perez {@literal<mailto: yrodriguez@hightech-corp.com />}
  * @version  1.0.0
@@ -69,13 +69,13 @@ public class ReaderQueueMasterThread extends Thread {
 	private States state;
 
 	/** The queue. */
-	Queue _queue;
+	Queue queue;
 
 	/** The queue conn. */
-	Connection _queueConn;
+	Connection queueConn;
 
 	/** The consumer. */
-	MessageConsumer _consumer;
+	MessageConsumer consumer;
 
 	/** The params. */
 	private Map<String, String> params;
@@ -119,13 +119,12 @@ public class ReaderQueueMasterThread extends Thread {
 	 * @return true, if successful
 	 */
 	private boolean startupQueueConnection() {
-		if (this._queueConn != null) {
+		if (this.queueConn != null) {
 			try {
-				this._queueConn.close();
-				this._queueConn = null;
+				this.queueConn.close();
+				this.queueConn = null;
 			} catch (JMSException e2) {
 				LOGGER.info("Queue connection could not be closed while performing cleanup.");
-				e2.printStackTrace();
 			}
 		}
 		InitialContext ctx = null;
@@ -136,9 +135,9 @@ public class ReaderQueueMasterThread extends Thread {
 		try {
 			ctx = new InitialContext(properties);
 			qcf = (QueueConnectionFactory) ctx.lookup(params.get("CONNECTION_QUEUE_CF_QR"));
-			this._queue = (Queue) ctx.lookup(params.get("CONNECTION_QUEUE_DQ_QR"));
-			this._queueConn = (Connection) qcf.createQueueConnection();
-			this._queueConn.start();
+			this.queue = (Queue) ctx.lookup(params.get("CONNECTION_QUEUE_DQ_QR"));
+			this.queueConn = (Connection) qcf.createQueueConnection();
+			this.queueConn.start();
 			ctx.close();
 			return true;
 		} catch (NamingException e) {
@@ -165,20 +164,19 @@ public class ReaderQueueMasterThread extends Thread {
 		startupQueueConnection();
 		
 		while (state == States.STARTED) {
-					
+			
+			long startTime = 0;	
 			try {
-				Session session = this._queueConn.createSession(false, 1);
-				this._consumer = session.createConsumer((Destination) this._queue);
-			} catch (Exception e) {
-				System.out.println("Error ocurred while attempting creation of queue session.");
-				e.printStackTrace();
-				//return;
+				Session session = this.queueConn.createSession(false, 1);
+				this.consumer = session.createConsumer((Destination) this.queue);
+			} catch (JMSException e) {
+				LOGGER.error("Error ocurred while attempting creation of queue session.");
+				return;
 			}
 
-			long startTime = 0;
 			try {
 				
-				TextMessage message = (TextMessage) this._consumer.receive();
+				TextMessage message = (TextMessage) this.consumer.receive();
 				String mensaje = message.getText();
 
 				startTime = sendToCPE(startTime, mensaje);
@@ -197,7 +195,7 @@ public class ReaderQueueMasterThread extends Thread {
 				startTime = 0;
 
 			}
-			state = States.SHUTTINGDOWN;
+			//state = States.SHUTTINGDOWN;
 		}
 		executorService.shutdown();
 	}
@@ -211,7 +209,7 @@ public class ReaderQueueMasterThread extends Thread {
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 * @throws MalformedURLException the malformed URL exception
 	 */
-	public long sendToCPE(long startTime, String mensaje) throws IOException, MalformedURLException {
+	public long sendToCPE(long startTime, String mensaje) throws IOException {
 		
 		if (mensaje != null && !mensaje.equals("")) {
 			startTime = System.nanoTime();
@@ -255,7 +253,7 @@ public class ReaderQueueMasterThread extends Thread {
 		request.setComment(comment);
 		request.setExternalTransacionId(UUID.randomUUID().toString());
 		OrderRequestDetail orderRequestDetail = new OrderRequestDetail();
-		orderRequestDetail.setProductId(Integer.valueOf(notifyMessage.getProductId()));
+		orderRequestDetail.setProductId(notifyMessage.getProductId());
 		orderRequestDetail.setSubscriberId(notifyMessage.getSubscriberId());
 		orderRequestDetail.setQuantity(1);
 
@@ -273,6 +271,22 @@ public class ReaderQueueMasterThread extends Thread {
 			orderRequestDetail.setOrderType(EnumOrderType.TRANSFER);
 		}
 		AdditionalParameters addParameters = new AdditionalParameters();
+		getAddParamsData(notifyMessage, addParameters);
+		
+		orderRequestDetail.setAdditionalParameters(addParameters);
+		request.getOrderRequestDetail().add(orderRequestDetail);
+
+		return request;
+	}
+
+	/**
+	 * Gets the adds the params data.
+	 *
+	 * @param notifyMessage the notify message
+	 * @param addParameters the add parameters
+	 * @return the adds the params data
+	 */
+	private void getAddParamsData(final NotifyMessageDTO notifyMessage, AdditionalParameters addParameters) {
 		Parameter parameter;
 		for (int count = 0; count <= notifyMessage.getAdditionalsParams().size() - 2; count++) {
 			if (count == 0) {
@@ -297,10 +311,6 @@ public class ReaderQueueMasterThread extends Thread {
 				addParameters.getParameter().add(parameter);
 			}
 		}
-		orderRequestDetail.setAdditionalParameters(addParameters);
-		request.getOrderRequestDetail().add(orderRequestDetail);
-
-		return request;
 	}
 
 	/**

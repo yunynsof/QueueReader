@@ -10,7 +10,7 @@
 		<url.archiva>192.168.159.49</url.archiva>
 		<junit.version>4.12</junit.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<surefire.skiptests>false</surefire.skiptests>
+		<surefire.skiptests>true</surefire.skiptests>
 		<runSuite>**/AllTest.class</runSuite>
 	</properties>
 	
@@ -31,7 +31,7 @@
 					**/service/**,**/constants/**,
 					**/dto/**, **/entity/**, **/context/**,
 					**/as400/**,ejbModule/hn/com/tigo/queue/listener/NewRelicImpl.java,
-					ejbModule/hn/com/tigo/queue/listener/ReaderQueueDeamonThread.java
+					ejbModule/hn/com/tigo/queue/listener/ReaderQueueDaemonThread.java
 				</sonar.exclusions>
 			</properties>
 		</profile>

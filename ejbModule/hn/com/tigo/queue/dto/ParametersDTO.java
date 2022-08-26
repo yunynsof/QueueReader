@@ -2,9 +2,8 @@ package hn.com.tigo.queue.dto;
 
 import java.util.Date;
 
-
 /**
- * ParametersDTO.
+ * This class is responsible for mapping the parameters obtained from the database.
  *
  * @author Yuny Rene Rodriguez Perez {@literal<mailto: yrodriguez@hightech-corp.com />}
  * @version  1.0.0
