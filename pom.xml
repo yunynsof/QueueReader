@@ -28,10 +28,10 @@
 				<sonar.java.codeCoveragePlugin>jacoco</sonar.java.codeCoveragePlugin>
 				<sonar.jacoco.reportPath>target/coverage-reports/jacoco-ut.exec</sonar.jacoco.reportPath>
 				<sonar.exclusions>**/generated-sources/**, **/utils/**,
-					**/common/**,**/constants/**,
+					**/service/**,**/constants/**,
 					**/dto/**, **/entity/**, **/context/**,
 					**/as400/**,ejbModule/hn/com/tigo/queue/listener/NewRelicImpl.java,
-					ejbModule/hn/com/tigo/queue/listener/ReaderQueueMasterThread.java
+					ejbModule/hn/com/tigo/queue/listener/ReaderQueueDeamonThread.java
 				</sonar.exclusions>
 			</properties>
 		</profile>
